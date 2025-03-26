@@ -13,11 +13,11 @@ We are using the **Yelp Academic Dataset**, which includes:
 - `yelp_academic_dataset_review.json`
 
 ## Project Proposal Requirements
--Project introduction
--Any changes
--Data cleaning
--Exploratory data analysis
--At least one visualization
--At least one ML analysis
--Reflection
--Next steps
+- Project introduction
+- Any changes
+- Data cleaning
+- Exploratory data analysis
+- At least one visualization
+- At least one ML analysis
+- Reflection
+- Next steps
