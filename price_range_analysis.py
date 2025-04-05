@@ -32,17 +32,29 @@ def addPriceRangeColumn(restaurants_df):
     """
     Inputs: restaurants_df, a dataframe where rows represent a restaurant with the column "attributes".
             
-    Outputs: A dataframe with all the same rows and columns as restaurants_df, but with the added column of "PriceRange", representing
-            the reported expected cost of eating at the restaurant by Yelp reviewers (graded from 1 to 4, where 1 is least expensive).
+    Outputs: A list to be used in the main file for the creation of the actual PriceRange column.
     """
     droppedAttributes=restaurants_df.copy(deep=True)
-    droppedAttributes=droppedAttributes.dropna(subset="attributes")
     priceRangeList=[]
 
     for entry in droppedAttributes["attributes"]:
         priceRangeList.append(entry.get("RestaurantsPriceRange2"))
-    restaurantsWithPriceRanges=droppedAttributes.dropna(subset="PriceRange")
+    
+    return priceRangeList
+
+
+def showPriceRangePlot(restaurants_df):
+
+    """
+    Inputs: restaurants_df, a dataframe where rows represent a restaurant with the column "PriceRange".
+            
+    Outputs: Nothing, but does print a nice plot!
+    """
+    restaurantsWithPriceRanges=restaurants_df.dropna(subset="PriceRange")
     restaurantsWithPriceRanges=restaurantsWithPriceRanges[restaurantsWithPriceRanges["PriceRange"]!="None"]
-    
-    
-    return restaurantsWithPriceRanges
+
+    axes=sns.boxplot(data=restaurantsWithPriceRanges, x="PriceRange", y="average_stars", palette="mako")
+    axes.set_xlabel("Price Range (as told by Yelp)")
+    axes.set_ylabel("Average Review Score (1 to 5)")
+    plt.show()
+    return
