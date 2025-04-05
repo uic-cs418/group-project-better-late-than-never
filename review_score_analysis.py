@@ -16,4 +16,3 @@ def calculate_average_review_score(reviews_df):
     merged_data = pd.merge(reviews_df, avg_review_scores, on='business_id', how='left')
 
     return merged_data
-

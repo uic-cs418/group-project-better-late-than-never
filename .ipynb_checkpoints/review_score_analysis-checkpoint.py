@@ -6,7 +6,7 @@ import seaborn as sns
 def calculate_average_review_score(reviews_df):
     """
     Input filtered reviews dataframe, return a dataframe with the average review score for each 
-    restaurant in column 'avg_review_score' appened to reviews dataframe
+    restaurant in column 'avg_review_score' appended to reviews dataframe
     """
     avg_review_scores = reviews_df.groupby('business_id')['stars'] \
                                         .mean() \
@@ -16,3 +16,4 @@ def calculate_average_review_score(reviews_df):
     merged_data = pd.merge(reviews_df, avg_review_scores, on='business_id', how='left')
 
     return merged_data
+
