@@ -35,12 +35,15 @@ def addPriceRangeColumn(restaurants_df):
     Outputs: A list to be used in the main file for the creation of the actual PriceRange column.
     """
     droppedAttributes=restaurants_df.copy(deep=True)
+    droppedAttributes=droppedAttributes.dropna(subset="attributes")
     priceRangeList=[]
 
     for entry in droppedAttributes["attributes"]:
         priceRangeList.append(entry.get("RestaurantsPriceRange2"))
+
     
-    return priceRangeList
+    
+    return droppedAttributes, priceRangeList
 
 
 def showPriceRangePlot(restaurants_df):
