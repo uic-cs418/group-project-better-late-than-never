@@ -1,15 +1,15 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 import nltk
+from cuml.svm import SVC
+from cuml.accel import install
+install()
 import sklearn
+import joblib
 import string
 import warnings
 import re
 from scipy import sparse
-from IPython.display import display, Latex, Markdown
-warnings.filterwarnings('ignore')
 import data_cleaning as dc
 import review_score_analysis as rs
 
@@ -132,7 +132,8 @@ def learn_classifier(X_train, y_train, kernel):
         sklearn.svm.SVC: classifier learnt from data
     """
     
-    classifier = sklearn.svm.SVC(kernel=kernel)
+    #classifier = sklearn.svm.SVC(kernel=kernel)
+    classifier = SVC(kernel=kernel)
     classifier.fit(X_train, y_train)
 
     return classifier
@@ -231,3 +232,25 @@ def train_evaluate_model(avg_scores_df, size):
 
     print(f"Accuracy of our model: {accuracy}")
 
+def train_model(avg_scores_df, size):
+    """
+    Similar to above, but returns the trained model
+    1. Creates a TFIDF feature matrix from the text of yelp reviews
+    2. Creates labels for those features
+    4. Trains a Support Vector Classifier (SVC) to classify if a review came from
+       a restaurant with average review score >= 4.5, or not. Uses {size} datapoints
+    5. Returns X, y, SVC
+    """
+    # Create features
+    processed_reviews = process_all(avg_scores_df[0:size])
+    stopwords=nltk.corpus.stopwords.words('english')
+    processed_stopwords = list(np.concatenate([process(word) for word in stopwords]))
+    (tfidf, X) = create_features(processed_reviews, processed_stopwords)
+
+    # Create labels
+    y = create_labels(avg_scores_df[0:size])
+
+    # Train amodel
+    review_classifier = learn_classifier(X, y, 'poly')
+
+    return X, y, review_classifier
