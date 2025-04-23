@@ -253,26 +253,3 @@ def train_model(avg_scores_df, size):
     # Train amodel
     review_classifier = learn_classifier(X, y, 'poly')
 
-    return X, y, review_classifier
-
-
-def save_model(features, labels, classifier, model_name):
-    """
-    saves the features, labels, and classifier to individual files
-    """
-    with open(f'data/{model_name}_features.pkl', "wb") as file:
-        pickle.dump(features, file)
-
-    with open(f'data/{model_name}_labels.pkl', "wb") as file:
-        pickle.dump(labels, file)
-
-    with open(f'data/{model_name}_classifier.pkl', "wb") as file:
-        pickle.dump(classifier, file)
-
-    return
-
-def load_model(model_name):
-    """
-    loads the features, labels, and classifier into individual variables
-    """
-    
