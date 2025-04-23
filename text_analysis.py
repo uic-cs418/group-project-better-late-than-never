@@ -10,6 +10,7 @@ import string
 import warnings
 import re
 from scipy import sparse
+import pickle
 import data_cleaning as dc
 import review_score_analysis as rs
 
@@ -275,5 +276,13 @@ def load_model(model_name):
     """
     loads the features, labels, and classifier into individual variables
     """
+    with open(f'data/{model_name}_features.pkl', "wb") as features:
+        X = pickle.load(features)
+
+    with open(f'data/{model_name}_labels.pkl', "wb") as labels:
+       y =  pickle.load(labels)
+
+    with open(f'data/{model_name}_classifier.pkl', "wb") as classifier:
+        review_classifier = pickle.load(classifier)
     
     return X, y, review_classifier
