@@ -253,4 +253,3 @@ def train_model(avg_scores_df, size):
     # Train amodel
     review_classifier = learn_classifier(X, y, 'poly')
 
-    return X, y, review_classifier
