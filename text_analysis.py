@@ -1,15 +1,16 @@
 import numpy as np
 import pandas as pd
 import nltk
-from cuml.svm import SVC
 from cuml.accel import install
 install()
+from cuml.svm import SVC
 import sklearn
 import joblib
 import string
 import warnings
 import re
 from scipy import sparse
+import pickle
 import data_cleaning as dc
 import review_score_analysis as rs
 
@@ -30,7 +31,6 @@ def process(text, lemmatizer=nltk.stem.wordnet.WordNetLemmatizer()):
         "R":'r'
     }
 
-    
     # Create regex to catch URLs
     url_regex = re.compile(r'''(
         (?:https?://)?        ## Optionally match http:// or https://
@@ -84,6 +84,7 @@ def process_all(df, lemmatizer=nltk.stem.wordnet.WordNetLemmatizer()):
     df['text'] = df['text'].apply(process)
     return df
 
+
 ### Feature Construction
 def create_features(processed_reviews, stop_words):
     """ creates the feature matrix using the processed review text
@@ -107,8 +108,9 @@ def create_features(processed_reviews, stop_words):
     return tfidf, X
 
 
-def create_labels(avg_scores_df):
-    """ creates the class labels from avg_review_score
+def create_binary_labels(avg_scores_df):
+    """ 
+    creates two class labels from avg_review_score
     Inputs:
         avg_scores_df: pd.DataFrame: reviews read from training df, containing the column 'avg_review_score'
     Outputs:
@@ -121,6 +123,30 @@ def create_labels(avg_scores_df):
 
     return label_series
 
+def create_3_labels(avg_scores_df):
+    '''
+    creates three class labels from avg_review_score
+    Inputs:
+        avg_scores_df: pd.DataFrame: reviews read from training df, containing the column 'avg_review_score'
+    Outputs:
+        numpy.ndarray(int): series of class labels 
+        2 for restaurants with avg_review_score >= 4.5
+        1 for restaurants with 4.5 > avg_review_score >= 4.0
+        0 otherwise
+    '''
+    def classify(score):
+        if score < 4:
+            return 0
+        elif 4 <= score < 4.5:
+            return 1
+        else:
+            return 2
+        
+    label_series = avg_scores_df['avg_review_score'].apply(classify)
+
+    return label_series
+
+
 ### Classification
 def learn_classifier(X_train, y_train, kernel):
     """ learns a classifier from the input features and labels using the kernel function supplied
@@ -132,7 +158,6 @@ def learn_classifier(X_train, y_train, kernel):
         sklearn.svm.SVC: classifier learnt from data
     """
     
-    #classifier = sklearn.svm.SVC(kernel=kernel)
     classifier = SVC(kernel=kernel)
     classifier.fit(X_train, y_train)
 
@@ -204,35 +229,7 @@ def benchmark(X, y):
     print(f"Benchmark accuracy for our model to beat: {baseline}")
 
 
-def train_evaluate_model(avg_scores_df, size):
-    """
-    Puts it all together.
-    1. Creates a TFIDF feature matrix from the text of yelp reviews
-    2. Creates labels for those features
-    3. Creates a benchmark and outputs the accuracy to compare our model against
-    4. Trains a Support Vector Classifier (SVC) to classify if a review came from
-       a restaurant with average review score >= 4.5, or not. Uses {size} datapoints
-    5. Outputs accuracy of our model
-    """
-    # Create features
-    processed_reviews = process_all(avg_scores_df[0:size])
-    stopwords=nltk.corpus.stopwords.words('english')
-    processed_stopwords = list(np.concatenate([process(word) for word in stopwords]))
-    (tfidf, X) = create_features(processed_reviews, processed_stopwords)
-
-    # Create labels
-    y = create_labels(avg_scores_df[0:size])
-
-    # Create and output benchmark
-    benchmark(X, y)
-
-    # Train and evaluate model
-    review_classifier = learn_classifier(X, y, 'poly')
-    accuracy = evaluate_classifier(review_classifier, X, y)
-
-    print(f"Accuracy of our model: {accuracy}")
-
-def train_model(avg_scores_df, size):
+def train_binary_model(avg_scores_df, size):
     """
     Similar to above, but returns the trained model
     1. Creates a TFIDF feature matrix from the text of yelp reviews
@@ -248,8 +245,65 @@ def train_model(avg_scores_df, size):
     (tfidf, X) = create_features(processed_reviews, processed_stopwords)
 
     # Create labels
-    y = create_labels(avg_scores_df[0:size])
+    y = create_binary_labels(avg_scores_df[0:size])
 
-    # Train amodel
-    review_classifier = learn_classifier(X, y, 'poly')
+    # Train model
+    review_classifier = learn_classifier(X, y, 'rbf')
 
+    return X, y, review_classifier
+
+
+def train_3_class_model(avg_scores_df, size):
+    """
+    Trains a model to identify a review as bad, good, or great
+    1. Creates a TFIDF feature matrix from the text of yelp reviews
+    2. Creates labels for those features
+    4. Trains a Support Vector Classifier (SVC) to classify if a review came from
+       a restaurant with score < 4, 4 <= score < 4.5, or 4.5 <= score
+    5. Returns X, y, SVC
+    """
+    # Create features
+    processed_reviews = process_all(avg_scores_df[0:size])
+    stopwords=nltk.corpus.stopwords.words('english')
+    processed_stopwords = list(np.concatenate([process(word) for word in stopwords]))
+    (tfidf, X) = create_features(processed_reviews, processed_stopwords)
+
+    # Create labels
+    y = create_3_labels(avg_scores_df[0:size])
+
+    # Train model
+    review_classifier = sklearn.svm.SVC(kernel="linear", decision_function_shape='ovr')
+    review_classifier.fit(X, y)
+
+    return X, y, review_classifier
+
+
+def save_model(features, labels, classifier, model_name):
+    """
+    saves the features, labels, and classifier to individual files
+    """
+    with open(f'data/{model_name}_features.pkl', "wb") as file:
+        pickle.dump(features, file)
+
+    with open(f'data/{model_name}_labels.pkl', "wb") as file:
+        pickle.dump(labels, file)
+
+    with open(f'data/{model_name}_classifier.pkl', "wb") as file:
+        pickle.dump(classifier, file)
+
+    return
+
+def load_model(model_name):
+    """
+    loads the features, labels, and classifier into individual variables
+    """
+    with open(f'data/{model_name}_features.pkl', "wb") as features:
+        X = pickle.load(features)
+
+    with open(f'data/{model_name}_labels.pkl', "wb") as labels:
+       y =  pickle.load(labels)
+
+    with open(f'data/{model_name}_classifier.pkl', "wb") as classifier:
+        review_classifier = pickle.load(classifier)
+    
+    return X, y, review_classifier
