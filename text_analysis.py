@@ -5,7 +5,6 @@ from cuml.accel import install
 install()
 from cuml.svm import SVC
 import sklearn
-import joblib
 import string
 import warnings
 import re
@@ -276,6 +275,47 @@ def train_3_class_model(avg_scores_df, size):
     review_classifier.fit(X, y)
 
     return X, y, review_classifier
+
+def binary_kernel_cross_validation(X, y):
+    """
+    Select the kernel giving best results using k-fold cross-validation.
+    Other parameters should be left default.
+    Input:
+    kf (sklearn.model_selection.KFold): kf object defined above
+    X (scipy.sparse.csr.csr_matrix): training data
+    y (array(int)): training labels
+    Return:
+    best_kernel (string)
+    """
+    # Use dict to store results of each evaluation, initialize to NaN
+    avg_kernel_accuracies = {
+        'linear': np.nan,
+        'rbf': np.nan,
+        'poly': np.nan,
+        'sigmoid': np.nan
+    }
+
+    # Use 4-fold split
+    kf = sklearn.model_selection.KFold(n_splits=4, random_state=1, shuffle=True)
+
+    for kernel in ['linear', 'rbf', 'poly', 'sigmoid']:
+        scores = []
+        # Use the documentation of KFold cross-validation to split ..
+        # training data and test data from create_features() and create_labels()
+        for i, (training_split, test_split) in enumerate(kf.split(X, y)):
+            # call learn_classifer() using training split of kth fold
+            classifier = learn_classifier(X[training_split], y[training_split], kernel)
+            # evaluate on the test split of kth fold
+            accuracy = evaluate_classifier(classifier, X[test_split], y[test_split])
+            print(f"Accuracy of {kernel} kernel on split {i}: {accuracy}")
+            scores.append(accuracy)
+
+        # record avg accuracies and determine best model (kernel)
+        avg_kernel_accuracies[kernel] = np.average(scores)
+    
+    #return best kernel as string
+    best_kernel = max(avg_kernel_accuracies, key=avg_kernel_accuracies.get)
+    return best_kernel
 
 
 def save_model(features, labels, classifier, model_name):
