@@ -177,7 +177,7 @@ def evaluate_classifier(classifier, X_validation, y_validation):
     # Calculate accuracy of predictions
     accuracy = sklearn.metrics.accuracy_score(y_validation, predicted_labels)
     
-    return accuracy
+    print (f'Model Accuracy: {accuracy}')
 
 class MajorityLabelClassifier():
     """
