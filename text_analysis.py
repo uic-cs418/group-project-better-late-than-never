@@ -232,7 +232,7 @@ def benchmark(X, y):
 
 def train_binary_model(avg_scores_df, size):
     """
-    Similar to above, but returns the trained model
+    Brings it all together
     1. Creates a TFIDF feature matrix from the text of yelp reviews
     2. Creates labels for those features
     4. Trains a Support Vector Classifier (SVC) to classify if a review came from
@@ -249,7 +249,7 @@ def train_binary_model(avg_scores_df, size):
     y = create_binary_labels(avg_scores_df[0:size])
 
     # Train model
-    review_classifier = learn_classifier(X, y, 'rbf')
+    review_classifier = learn_classifier(X, y, 'linear')
 
     return X, y, review_classifier
 
