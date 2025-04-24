@@ -1,4 +1,6 @@
 import numpy as np
+import cudf.pandas
+cudf.pandas.install()
 import pandas as pd
 import nltk
 from cuml.accel import install
