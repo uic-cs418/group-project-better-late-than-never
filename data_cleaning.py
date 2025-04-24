@@ -25,7 +25,7 @@ def filter_business_data(business_dataset, chunk_size):
     unfiltered_business_df = load(business_dataset, chunk_size)
     # Select all businesses with "Restaurants" category
     restaurants_df = unfiltered_business_df[(unfiltered_business_df["categories"].str.contains("restaurant", case=False, na=False))]
-    # Select all restaurants with > 30 reviews
+    # Select all restaurants with >= 30 reviews
     reviewed_restaurants = restaurants_df[(restaurants_df["review_count"] >= 30)]
 
     return reviewed_restaurants
