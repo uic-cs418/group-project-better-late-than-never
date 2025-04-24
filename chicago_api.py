@@ -7,10 +7,10 @@ def read_api_key(path="data/api_key_yelp.txt"):
         return file.read().strip()
 
 def read_neighborhoods(path="data/chicago_neighborhoods.txt"):
-    neighborhoods = set()
+    neighborhoods = []
     with open(path, "r") as file:
         for line in file:
-            neighborhoods.add(line.strip())
+            neighborhoods.append(line.strip())
     return list(neighborhoods)
 
 def location_search_params(api_key, location, **kwargs):
