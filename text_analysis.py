@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 import nltk
-from cuml.svm import SVC
 from cuml.accel import install
 install()
+from cuml.svm import SVC
 import sklearn
 import joblib
 import string
