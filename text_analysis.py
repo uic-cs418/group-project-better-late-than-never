@@ -240,16 +240,16 @@ def train_binary_model(avg_scores_df, size):
     5. Returns X, y, SVC
     """
     # Create features
-    processed_reviews = process_all(avg_scores_df[0:size])
+    processed_reviews = process_all(avg_scores_df.loc[0:size])
     stopwords=nltk.corpus.stopwords.words('english')
     processed_stopwords = list(np.concatenate([process(word) for word in stopwords]))
     (tfidf, X) = create_features(processed_reviews, processed_stopwords)
 
     # Create labels
-    y = create_binary_labels(avg_scores_df[0:size])
+    y = create_binary_labels(avg_scores_df.loc[0:size])
 
     # Train model
-    review_classifier = learn_classifier(X, y, 'linear')
+    review_classifier = learn_classifier(X, y, 'poly')
 
     return X, y, review_classifier
 
