@@ -264,16 +264,16 @@ def train_3_class_model(avg_scores_df, size):
     5. Returns X, y, SVC
     """
     # Create features
-    processed_reviews = process_all(avg_scores_df[0:size])
+    processed_reviews = process_all(avg_scores_df.loc[0:size])
     stopwords=nltk.corpus.stopwords.words('english')
     processed_stopwords = list(np.concatenate([process(word) for word in stopwords]))
     (tfidf, X) = create_features(processed_reviews, processed_stopwords)
 
     # Create labels
-    y = create_3_labels(avg_scores_df[0:size])
+    y = create_3_labels(avg_scores_df.loc[0:size])
 
     # Train model
-    review_classifier = sklearn.svm.SVC(kernel="linear", decision_function_shape='ovr')
+    review_classifier = sklearn.svm.SVC(kernel="poly", decision_function_shape='ovr')
     review_classifier.fit(X, y)
 
     return X, y, review_classifier
@@ -319,6 +319,47 @@ def binary_kernel_cross_validation(X, y):
     best_kernel = max(avg_kernel_accuracies, key=avg_kernel_accuracies.get)
     return best_kernel
 
+def three_way_cross_validation(X, y):
+    """
+    Select the kernel giving best results using k-fold cross-validation.
+    Other parameters should be left default.
+    Input:
+    kf (sklearn.model_selection.KFold): kf object defined above
+    X (scipy.sparse.csr.csr_matrix): training data
+    y (array(int)): training labels
+    Return:
+    best_kernel (string)
+    """
+    # Use dict to store results of each evaluation, initialize to NaN
+    avg_kernel_accuracies = {
+        'linear': np.nan,
+        'rbf': np.nan,
+        'poly': np.nan,
+        'sigmoid': np.nan
+    }
+
+    # Use 4-fold split
+    kf = sklearn.model_selection.KFold(n_splits=4, random_state=1, shuffle=True)
+
+    for kernel in ['linear', 'rbf', 'poly', 'sigmoid']:
+        scores = []
+        # Use the documentation of KFold cross-validation to split ..
+        # training data and test data from create_features() and create_labels()
+        for i, (training_split, test_split) in enumerate(kf.split(X, y)):
+            # train classifier using training split of kth fold
+            classifier = sklearn.svm.SVC(kernel=kernel, decision_function_shape='ovr')
+            classifier.fit(X[training_split], y[training_split])
+            # evaluate on the test split of kth fold
+            accuracy = evaluate_classifier(classifier, X[test_split], y[test_split])
+            print(f"Accuracy of {kernel} kernel on split {i}: {accuracy}")
+            scores.append(accuracy)
+
+        # record avg accuracies and determine best model (kernel)
+        avg_kernel_accuracies[kernel] = np.average(scores)
+    
+    #return best kernel as string
+    best_kernel = max(avg_kernel_accuracies, key=avg_kernel_accuracies.get)
+    return best_kernel
 
 def save_model(features, labels, classifier, model_name):
     """
@@ -339,13 +380,13 @@ def load_model(model_name):
     """
     loads the features, labels, and classifier into individual variables
     """
-    with open(f'data/{model_name}_features.pkl', "wb") as features:
+    with open(f'data/{model_name}_features.pkl', "rb") as features:
         X = pickle.load(features)
 
-    with open(f'data/{model_name}_labels.pkl', "wb") as labels:
+    with open(f'data/{model_name}_labels.pkl', "rb") as labels:
        y =  pickle.load(labels)
 
-    with open(f'data/{model_name}_classifier.pkl', "wb") as classifier:
+    with open(f'data/{model_name}_classifier.pkl', "rb") as classifier:
         review_classifier = pickle.load(classifier)
     
     return X, y, review_classifier
