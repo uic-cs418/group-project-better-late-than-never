@@ -13,9 +13,9 @@ def averageRatingbyUsers(users_df, reviews_df):
 
     plt.figure(figsize=(10, 6))
     sns.histplot(possiblebias["avgRatingGiven"], bins=20)
-    plt.title("distribution of average ratings given by users")
-    plt.xlabel("average rating")
-    plt.ylabel("# of Users")
+    plt.title("Distribution of Average Ratings per User. Do Users Rate Too Generously?")
+    plt.xlabel("Average Rating by User")
+    plt.ylabel("Number of Users")
     plt.grid(True)
     plt.show()
 
@@ -35,8 +35,8 @@ def numReviewDistributionbyUsers(users_df):
 
     plt.figure(figsize=(10, 5))
     sns.barplot(x=review_counts.index, y=review_counts.values)
-    plt.xlabel("# of review ranges")
-    plt.ylabel("# of users")
-    plt.title("# of users grouped by # of reviews")
+    plt.xlabel("Number of Reviews by Range")
+    plt.ylabel("Number of Users")
+    plt.title("How Many Reviews do Users Write? Grouping Users by Review Counts.")
     plt.grid(axis="y", linestyle="--")
     plt.show()
