@@ -116,11 +116,11 @@ def create_binary_labels(avg_scores_df):
         avg_scores_df: pd.DataFrame: reviews read from training df, containing the column 'avg_review_score'
     Outputs:
         numpy.ndarray(int): series of class labels 
-        1 for restaurants with avg_review_score >= 4.3
+        1 for restaurants with avg_review_score >= 4.4
         0 otherwise
     """
     # Apply vectorized  operation to score restaurants
-    label_series = (avg_scores_df['avg_review_score'] >= 4.3).astype(int)
+    label_series = (avg_scores_df['avg_review_score'] >= 4.4).astype(int)
 
     return label_series
 
@@ -173,7 +173,7 @@ def evaluate_classifier(classifier, X_validation, y_validation):
     Outputs:
         double: accuracy of classifier on the validation data
     """
-    # Run classification of predicted political party based on each tweet
+    # Run classification
     predicted_labels = classifier.predict(X_validation)
 
     # Calculate accuracy of predictions
@@ -249,7 +249,7 @@ def train_binary_model(avg_scores_df, size):
     y = create_binary_labels(avg_scores_df.loc[0:size])
 
     # Train model
-    review_classifier = learn_classifier(X, y, 'rbf')
+    review_classifier = learn_classifier(X, y, 'linear')
 
     return X, y, tfidf, review_classifier
 
