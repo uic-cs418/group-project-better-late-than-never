@@ -116,11 +116,11 @@ def create_binary_labels(avg_scores_df):
         avg_scores_df: pd.DataFrame: reviews read from training df, containing the column 'avg_review_score'
     Outputs:
         numpy.ndarray(int): series of class labels 
-        1 for restaurants with avg_review_score >= 4.5
+        1 for restaurants with avg_review_score >= 4.3
         0 otherwise
     """
     # Apply vectorized  operation to score restaurants
-    label_series = (avg_scores_df['avg_review_score'] >= 4.5).astype(int)
+    label_series = (avg_scores_df['avg_review_score'] >= 4.3).astype(int)
 
     return label_series
 
@@ -131,14 +131,14 @@ def create_3_labels(avg_scores_df):
         avg_scores_df: pd.DataFrame: reviews read from training df, containing the column 'avg_review_score'
     Outputs:
         numpy.ndarray(int): series of class labels 
-        2 for restaurants with avg_review_score >= 4.5
+        2 for restaurants with avg_review_score >= 4.3
         1 for restaurants with 4.5 > avg_review_score >= 4.0
         0 otherwise
     '''
     def classify(score):
         if score < 4:
             return 0
-        elif 4 <= score < 4.5:
+        elif 4 <= score < 4.3:
             return 1
         else:
             return 2
@@ -249,9 +249,9 @@ def train_binary_model(avg_scores_df, size):
     y = create_binary_labels(avg_scores_df.loc[0:size])
 
     # Train model
-    review_classifier = learn_classifier(X, y, 'poly')
+    review_classifier = learn_classifier(X, y, 'rbf')
 
-    return X, y, review_classifier
+    return X, y, tfidf, review_classifier
 
 
 def train_3_class_model(avg_scores_df, size):
@@ -277,6 +277,25 @@ def train_3_class_model(avg_scores_df, size):
     review_classifier.fit(X, y)
 
     return X, y, review_classifier
+
+def create_test_data(avg_scores_df, size, tfidf):
+    """
+    Creates test data with 'size' datapoints, to be evaluated by trained model
+    1. Creates a TFIDF feature matrix from the text of yelp reviews (needs training tfidf)
+    2. Creates labels for those features
+    5. Returns X (test_features), y (test_labels)
+    """
+    # Create features with data points not used in training
+    processed_reviews = process_all(avg_scores_df.loc[1_000_000:(size + 1_000_000)])
+    tfidf_input = processed_reviews["text"].apply(lambda x: ' '.join(x)).tolist()
+    X = tfidf.transform(tfidf_input)
+
+    # Create labels
+    y = create_binary_labels(avg_scores_df.loc[0:size])
+
+
+    return X, y
+
 
 def binary_kernel_cross_validation(X, y):
     """
