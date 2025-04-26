@@ -380,7 +380,7 @@ def three_way_cross_validation(X, y):
     best_kernel = max(avg_kernel_accuracies, key=avg_kernel_accuracies.get)
     return best_kernel
 
-def save_model(features, labels, classifier, model_name):
+def save_model(features, labels, tfidf, classifier, model_name):
     """
     saves the features, labels, and classifier to individual files
     """
@@ -389,6 +389,9 @@ def save_model(features, labels, classifier, model_name):
 
     with open(f'data/{model_name}_labels.pkl', "wb") as file:
         pickle.dump(labels, file)
+
+    with open(f'data/{model_name}_tfidf.pkl', "wb") as file:
+        pickle.dump(tfidf, file)
 
     with open(f'data/{model_name}_classifier.pkl', "wb") as file:
         pickle.dump(classifier, file)
@@ -404,6 +407,9 @@ def load_model(model_name):
 
     with open(f'data/{model_name}_labels.pkl', "rb") as labels:
        y =  pickle.load(labels)
+
+    with open(f'data/{model_name}_tfidf.pkl', "rb") as tfidf:
+       y =  pickle.load(tfidf)
 
     with open(f'data/{model_name}_classifier.pkl', "rb") as classifier:
         review_classifier = pickle.load(classifier)
