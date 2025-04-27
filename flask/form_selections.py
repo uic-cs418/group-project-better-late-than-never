@@ -93,13 +93,14 @@ categories = [
     "Pizza",
     "Sandwiches",
     "Seafood",
+    "Sushi",
     "Thai",
     "Vietnamese",
 ]
 
 prices = [
-    ("1", "$"),
-    ("2", "$$"),
-    ("3", "$$$"),
-    ("4", "$$$$"),
+    "$",
+    "$$",
+    "$$$",
+    "$$$$",
 ]
