@@ -2,11 +2,24 @@
 <html>
 
 <head>
-    <title>FlaskTest</title>
+    <title>Chicago Restaurant Recommendations</title>
 </head>
 
 <body>
     <h2>What would you like to eat?</h2>
+    <form action="{{ url_for('index') }}" method="POST">
+        {{ form.hidden_tag() }} <!-- This automatically includes CSRF token -->
+        <label for="Neighborhood">Neighborhood</label>
+        {{ form.neighborhood() }} <!-- Flask-WTF handles input -->
+        <label for="Category">Category</label>
+        {{ form.category() }} <!-- Flask-WTF handles input -->
+        <label for="Price">Price</label>
+        {{ form.price() }} <!-- Flask-WTF handles input -->
+        {{ form.submit() }} <!-- Submit button -->
+    </form>
+    {% for message in get_flashed_messages() %}
+    <h3>{{ message }}</h1>
+        {% endfor %}
 </body>
 
 </html>

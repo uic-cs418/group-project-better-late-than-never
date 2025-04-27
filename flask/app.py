@@ -21,16 +21,19 @@ class InputForm(FlaskForm):
         "Category", choices=fields.categories, validators=[DataRequired()]
     )
     price = SelectField("Price", choices=fields.prices, validators=[DataRequired()])
+    submit = SubmitField("Submit")
 
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
     form = InputForm()
 
     if request.method == "POST":
         if form.validate_on_submit():
-            name = form.name.data
-            flash(f"inputs are ", "success")
+            neighborhood = form.neighborhood.data
+            category = form.category.data
+            price = form.price.data
+            flash(f"inputs are {neighborhood}, {category}, {price}", "success")
             return render_template("index.html", form=form)
         else:
             flash("CSRF Token Missing or Invalid!", "danger")
