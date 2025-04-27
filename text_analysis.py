@@ -245,8 +245,7 @@ def create_multiclass_test_data(avg_scores_df, size, tfidf):
     X = tfidf.transform(tfidf_input)
 
     # Create labels
-    y = create_3_labels(avg_scores_df.loc[0:size])
-
+    y = create_3_labels(avg_scores_df.loc[1_000_000:(size + 1_000_000)])
 
     return X, y
 
@@ -261,7 +260,6 @@ def evaluate_classifier(classifier, X_validation, y_validation):
     """
     # Run classification
     predicted_labels = classifier.predict(X_validation)
-
     # Calculate accuracy of predictions
     accuracy = sklearn.metrics.accuracy_score(y_validation, predicted_labels)
     
