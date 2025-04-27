@@ -15,6 +15,7 @@ import pickle
 import data_cleaning as dc
 import review_score_analysis as rs
 
+## Text Processing
 def process(text, lemmatizer=nltk.stem.wordnet.WordNetLemmatizer()):
     """ Normalizes case and handles punctuation
     Inputs:
@@ -86,7 +87,7 @@ def process_all(df, lemmatizer=nltk.stem.wordnet.WordNetLemmatizer()):
     return df
 
 
-### Feature Construction
+### Feature/Label Construction
 def create_features(processed_reviews, stop_words):
     """ creates the feature matrix using the processed review text
     Inputs:
@@ -108,19 +109,18 @@ def create_features(processed_reviews, stop_words):
 
     return tfidf, X
 
-
 def create_binary_labels(avg_scores_df):
     """ 
     creates two class labels from avg_review_score
     Inputs:
-        avg_scores_df: pd.DataFrame: reviews read from training df, containing the column 'avg_review_score'
+        avg_scores_df: pd.DataFrame: reviews read from training df, containing the column 'stars'
     Outputs:
         numpy.ndarray(int): series of class labels 
-        1 for restaurants with avg_review_score >= 4.4
+        1 for restaurants with stars >= 4
         0 otherwise
     """
     # Apply vectorized  operation to score restaurants
-    label_series = (avg_scores_df['avg_review_score'] >= 4.4).astype(int)
+    label_series = (avg_scores_df['stars'] >= 4).astype(int)
 
     return label_series
 
@@ -128,22 +128,23 @@ def create_3_labels(avg_scores_df):
     '''
     creates three class labels from avg_review_score
     Inputs:
-        avg_scores_df: pd.DataFrame: reviews read from training df, containing the column 'avg_review_score'
+        avg_scores_df: pd.DataFrame: reviews read from training df, containing the column 'stars'
     Outputs:
         numpy.ndarray(int): series of class labels 
-        2 for restaurants with avg_review_score >= 4.3
-        1 for restaurants with 4.5 > avg_review_score >= 4.0
+        2 for restaurants with avg_review_score == 5
+        1 for restaurants with stars == 4
         0 otherwise
     '''
     def classify(score):
         if score < 4:
             return 0
-        elif 4 <= score < 4.3:
+        elif score == 4:
             return 1
         else:
             return 2
         
-    label_series = avg_scores_df['avg_review_score'].apply(classify)
+        
+    label_series = avg_scores_df['stars'].apply(classify)
 
     return label_series
 
@@ -163,6 +164,91 @@ def learn_classifier(X_train, y_train, kernel):
     classifier.fit(X_train, y_train)
 
     return classifier
+
+def train_binary_model(avg_scores_df, size):
+    """
+    Brings it all together
+    1. Creates a TFIDF feature matrix from the text of yelp reviews
+    2. Creates labels for those features
+    4. Trains a Support Vector Classifier (SVC) to classify if a review came from
+       a restaurant with stars >= 4, or not. Uses {size} datapoints
+    5. Returns X, y, tfidf, SVC
+    """
+    # Create features
+    processed_reviews = process_all(avg_scores_df.loc[0:size])
+    stopwords=nltk.corpus.stopwords.words('english')
+    processed_stopwords = list(np.concatenate([process(word) for word in stopwords]))
+    (tfidf, X) = create_features(processed_reviews, processed_stopwords)
+
+    # Create labels
+    y = create_binary_labels(avg_scores_df.loc[0:size])
+
+    # Train model
+    review_classifier = learn_classifier(X, y, 'linear')
+
+    return X, y, tfidf, review_classifier
+
+def train_3_class_model(avg_scores_df, size):
+    """
+    Trains a model to identify a review as bad, good, or great
+    1. Creates a TFIDF feature matrix from the text of yelp reviews
+    2. Creates labels for those features
+    4. Trains a Support Vector Classifier (SVC) to classify if a review came from
+       a restaurant with score < 4, score == 4, or score == 5
+    5. Returns X, y, tfidf, SVC
+    """
+    # Create features
+    processed_reviews = process_all(avg_scores_df.loc[0:size])
+    stopwords=nltk.corpus.stopwords.words('english')
+    processed_stopwords = list(np.concatenate([process(word) for word in stopwords]))
+    (tfidf, X) = create_features(processed_reviews, processed_stopwords)
+
+    # Create labels
+    y = create_3_labels(avg_scores_df.loc[0:size])
+
+    # Train model (cuml can only do binary SVC)
+    review_classifier = sklearn.svm.SVC(kernel="linear", decision_function_shape='ovr')
+    review_classifier.fit(X, y)
+
+    return X, y, tfidf, review_classifier
+
+
+## Evaluation
+def create_binary_test_data(avg_scores_df, size, tfidf):
+    """
+    Creates test data with 'size' datapoints, to be evaluated by trained model
+    1. Creates a TFIDF feature matrix from the text of yelp reviews (needs training tfidf)
+    2. Creates labels for those features
+    5. Returns X (test_features), y (test_labels)
+    """
+    # Create features with data points not used in training
+    processed_reviews = process_all(avg_scores_df.loc[1_000_000:(size + 1_000_000)])
+    tfidf_input = processed_reviews["text"].apply(lambda x: ' '.join(x)).tolist()
+    X = tfidf.transform(tfidf_input)
+
+    # Create labels
+    y = create_binary_labels(avg_scores_df.loc[1_000_000:(size + 1_000_000)])
+
+
+    return X, y
+
+def create_multiclass_test_data(avg_scores_df, size, tfidf):
+    """
+    Creates test data with 'size' datapoints, to be evaluated by trained model
+    1. Creates a TFIDF feature matrix from the text of yelp reviews (needs training tfidf)
+    2. Creates labels for those features
+    5. Returns X (test_features), y (test_labels)
+    """
+    # Create features with data points not used in training
+    processed_reviews = process_all(avg_scores_df.loc[1_000_000:(size + 1_000_000)])
+    tfidf_input = processed_reviews["text"].apply(lambda x: ' '.join(x)).tolist()
+    X = tfidf.transform(tfidf_input)
+
+    # Create labels
+    y = create_3_labels(avg_scores_df.loc[0:size])
+
+
+    return X, y
 
 def evaluate_classifier(classifier, X_validation, y_validation):
     """ evaluates a classifier based on a supplied validation data
@@ -229,74 +315,7 @@ def benchmark(X, y):
     baseline = sklearn.metrics.accuracy_score(y, predicted_labels)
     print(f"Benchmark accuracy for our model to beat: {baseline}")
 
-
-def train_binary_model(avg_scores_df, size):
-    """
-    Brings it all together
-    1. Creates a TFIDF feature matrix from the text of yelp reviews
-    2. Creates labels for those features
-    4. Trains a Support Vector Classifier (SVC) to classify if a review came from
-       a restaurant with average review score >= 4.5, or not. Uses {size} datapoints
-    5. Returns X, y, SVC
-    """
-    # Create features
-    processed_reviews = process_all(avg_scores_df.loc[0:size])
-    stopwords=nltk.corpus.stopwords.words('english')
-    processed_stopwords = list(np.concatenate([process(word) for word in stopwords]))
-    (tfidf, X) = create_features(processed_reviews, processed_stopwords)
-
-    # Create labels
-    y = create_binary_labels(avg_scores_df.loc[0:size])
-
-    # Train model
-    review_classifier = learn_classifier(X, y, 'linear')
-
-    return X, y, tfidf, review_classifier
-
-
-def train_3_class_model(avg_scores_df, size):
-    """
-    Trains a model to identify a review as bad, good, or great
-    1. Creates a TFIDF feature matrix from the text of yelp reviews
-    2. Creates labels for those features
-    4. Trains a Support Vector Classifier (SVC) to classify if a review came from
-       a restaurant with score < 4, 4 <= score < 4.5, or 4.5 <= score
-    5. Returns X, y, SVC
-    """
-    # Create features
-    processed_reviews = process_all(avg_scores_df.loc[0:size])
-    stopwords=nltk.corpus.stopwords.words('english')
-    processed_stopwords = list(np.concatenate([process(word) for word in stopwords]))
-    (tfidf, X) = create_features(processed_reviews, processed_stopwords)
-
-    # Create labels
-    y = create_3_labels(avg_scores_df.loc[0:size])
-
-    # Train model
-    review_classifier = sklearn.svm.SVC(kernel="poly", decision_function_shape='ovr')
-    review_classifier.fit(X, y)
-
-    return X, y, review_classifier
-
-def create_test_data(avg_scores_df, size, tfidf):
-    """
-    Creates test data with 'size' datapoints, to be evaluated by trained model
-    1. Creates a TFIDF feature matrix from the text of yelp reviews (needs training tfidf)
-    2. Creates labels for those features
-    5. Returns X (test_features), y (test_labels)
-    """
-    # Create features with data points not used in training
-    processed_reviews = process_all(avg_scores_df.loc[1_000_000:(size + 1_000_000)])
-    tfidf_input = processed_reviews["text"].apply(lambda x: ' '.join(x)).tolist()
-    X = tfidf.transform(tfidf_input)
-
-    # Create labels
-    y = create_binary_labels(avg_scores_df.loc[0:size])
-
-
-    return X, y
-
-
+## Cross-validation
 def binary_kernel_cross_validation(X, y):
     """
     Select the kernel giving best results using k-fold cross-validation.
@@ -380,6 +399,7 @@ def three_way_cross_validation(X, y):
     best_kernel = max(avg_kernel_accuracies, key=avg_kernel_accuracies.get)
     return best_kernel
 
+## Save/Load
 def save_model(features, labels, tfidf, classifier, model_name):
     """
     saves the features, labels, and classifier to individual files
@@ -409,9 +429,9 @@ def load_model(model_name):
        y =  pickle.load(labels)
 
     with open(f'data/{model_name}_tfidf.pkl', "rb") as tfidf:
-       y =  pickle.load(tfidf)
+       tfidf =  pickle.load(tfidf)
 
     with open(f'data/{model_name}_classifier.pkl', "rb") as classifier:
         review_classifier = pickle.load(classifier)
     
-    return X, y, review_classifier
+    return X, y, tfidf, review_classifier
