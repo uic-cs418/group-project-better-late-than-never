@@ -10,7 +10,7 @@ import recommend as rec
 app = Flask(__name__)
 app.secret_key = "encourageexecutestrongmedicine69420!"
 csrf = CSRFProtect(app)
-yelp_df = pd.read_json("static/chicago_restaurants_incomplete", lines=True)
+yelp_df = pd.read_json("static/test_data.json", lines=True)
 
 
 class InputForm(FlaskForm):
