@@ -81,21 +81,17 @@ chi_communities = [
 
 categories = [
     "American",
-    "Barbeque",
-    "Breakfast & Brunch",
-    "Burgers",
-    "Chinese",
-    "Coffee & Tea",
-    "Indian",
-    "Italian",
-    "Japanese",
     "Mexican",
-    "Pizza",
-    "Sandwiches",
-    "Seafood",
-    "Sushi",
+    "Italian",
+    "Chinese",
+    "Japanese",
     "Thai",
+    "Indian",
+    "Mediterranean",
     "Vietnamese",
+    "Seafood",
+    "Barbecue",
+    "Breakfast & Brunch",
 ]
 
 prices = [
