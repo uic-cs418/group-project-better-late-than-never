@@ -25,14 +25,14 @@ def get_best_restaurants(df, category, neighborhood, price_range):
         (tempDF["food_category"].str.contains(category, case=False, na=False))
     ]
     # select all restaurants that are in the correct price range.
-    tempDF = tempDF[(tempDF["price"].str.contains(price_range, case=False, na=False))]
+    tempDF = tempDF[(tempDF["price_range"] <= price_range)]
     # select all restaurants in the appropriate neighborhood.
     tempDF = tempDF[
         (tempDF["neighborhood"].str.contains(neighborhood, case=False, na=False))
     ]
     # sort the resulting DF by average review score
     sorted_df = tempDF.sort_values(
-        by=["rating", "price"], inplace=False, ascending=[False, False]
+        by=["price", "rating"], inplace=False, ascending=[False, False]
     )
     # select the top 5 results. Note that bc of the slice semantics, it's possible for fewer than 5 rows to be gotten here, and no error will be thrown.
     results = sorted_df.iloc[:5]
