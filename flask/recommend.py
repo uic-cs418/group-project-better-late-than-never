@@ -25,7 +25,7 @@ def get_best_restaurants(df, category, neighborhood, price_range):
         (tempDF["food_category"].str.contains(category, case=False, na=False))
     ]
     # select all restaurants that are in the correct price range.
-    tempDF = tempDF[(tempDF["price_range"] <= price_range)]
+    tempDF = tempDF[(tempDF["price_range"] <= int(price_range))]
     # select all restaurants in the appropriate neighborhood.
     tempDF = tempDF[
         (tempDF["neighborhood"].str.contains(neighborhood, case=False, na=False))
