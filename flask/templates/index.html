@@ -6,17 +6,19 @@
 </head>
 
 <body>
+    <!-- Form -->
     <h2>What would you like to eat?</h2>
     <form action="{{ url_for('index') }}" method="POST">
-        {{ form.hidden_tag() }} <!-- This automatically includes CSRF token -->
+        {{ form.hidden_tag() }} <!-- automatically include CSRF token -->
         <label for="Neighborhood">Neighborhood</label>
-        {{ form.neighborhood() }} <!-- Flask-WTF handles input -->
+        {{ form.neighborhood() }}
         <label for="Category">Category</label>
-        {{ form.category() }} <!-- Flask-WTF handles input -->
+        {{ form.category() }}
         <label for="Price">Price</label>
-        {{ form.price() }} <!-- Flask-WTF handles input -->
+        {{ form.price() }}
         {{ form.submit() }} <!-- Submit button -->
     </form>
+    <!-- Results -->
     {% with recommendations = get_flashed_messages() %}
     <h3>
         {% if recommendations %}
