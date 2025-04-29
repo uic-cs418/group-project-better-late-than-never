@@ -17,9 +17,18 @@
         {{ form.price() }} <!-- Flask-WTF handles input -->
         {{ form.submit() }} <!-- Submit button -->
     </form>
-    {% for message in get_flashed_messages() %}
-    <h3>{{ message }}</h1>
+    {% with recommendations = get_flashed_messages() %}
+    <h3>
+        {% if recommendations %}
+        {% for rec in recommendations %}
+        <li>{{ rec }}</li> <!-- Print each rec one at a time -->
         {% endfor %}
+        {% else %}
+        No Results, Please Enter a Different Query
+        {% endif %}
+    </h3>
+    {% endwith %}
+
 </body>
 
 </html>

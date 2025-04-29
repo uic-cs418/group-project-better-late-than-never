@@ -34,11 +34,15 @@ def index():
 
     if request.method == "POST":
         if form.validate_on_submit():
+            # Get form data
             neighborhood = form.neighborhood.data
             category = form.category.data
             price = form.price.data
+            # Run query from data
             yelp_recs = rec.get_best_restaurants(yelp_df, category, neighborhood, price)
-            flash(f"{yelp_recs}", "success")
+            # Return results with HTML
+            for recommendation in yelp_recs:
+                flash(f"{recommendation}", "success")
             return render_template("index.html", form=form)
         else:
             flash("CSRF Token Missing or Invalid!", "danger")
