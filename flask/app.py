@@ -10,12 +10,12 @@ import recommend as rec
 app = Flask(__name__)
 app.secret_key = "encourageexecutestrongmedicine69420!"
 csrf = CSRFProtect(app)
-yelp_df = pd.read_json("static/test_data.json", lines=True)
+yelp_df = pd.read_json("static/chicago_restaurants.json", lines=True)
 
 
 class InputForm(FlaskForm):
     """
-    Input neighborhood, category, price for pandas query
+    Form class to input neighborhood, category, price for pandas query
     """
 
     neighborhood = SelectField(
@@ -34,11 +34,15 @@ def index():
 
     if request.method == "POST":
         if form.validate_on_submit():
+            # Get form data
             neighborhood = form.neighborhood.data
             category = form.category.data
             price = form.price.data
+            # Run query from data
             yelp_recs = rec.get_best_restaurants(yelp_df, category, neighborhood, price)
-            flash(f"We recommend {yelp_recs}", "success")
+            # Return results with HTML
+            for recommendation in yelp_recs:
+                flash(f"{recommendation}", "success")
             return render_template("index.html", form=form)
         else:
             flash("CSRF Token Missing or Invalid!", "danger")
