@@ -97,7 +97,7 @@ def process_all(df, lemmatizer=nltk.stem.wordnet.WordNetLemmatizer()):
 
     # Return df copy with processed text column
     processed_df["text"] = processed_df["text"].apply(process)
-    return df
+    return processed_df
 
 
 ### Feature/Label Construction
