@@ -92,7 +92,11 @@ def process_all(df, lemmatizer=nltk.stem.wordnet.WordNetLemmatizer()):
         pd.DataFrame: dataframe in which the values of text column have been changed from str to list(str),
                         the output from process() function. Other columns are unaffected.
     """
-    df["text"] = df["text"].apply(process)
+    # Copy df to preserve original data
+    processed_df = df.copy(deep=True)
+
+    # Return df copy with processed text column
+    processed_df["text"] = processed_df["text"].apply(process)
     return df
 
 
@@ -227,22 +231,20 @@ def train_3_class_model(avg_scores_df, size):
 
 
 ## Evaluation
-def create_binary_test_data(avg_scores_df, size, tfidf):
+def create_binary_test_data(reviews_df, size, tfidf):
     """
     Creates test data with 'size' datapoints, to be evaluated by trained model
     1. Creates a TFIDF feature matrix from the text of yelp reviews (needs training tfidf)
     2. Creates labels for those features
     5. Returns X (test_features), y (test_labels)
     """
-    # TODO: create copy to clear warning
-
     # Create features with data points not used in training
-    processed_reviews = process_all(avg_scores_df.loc[1_000_000 : (size + 1_000_000)])
+    processed_reviews = process_all(reviews_df.loc[1_000_000 : (size + 1_000_000)])
     tfidf_input = processed_reviews["text"].apply(lambda x: " ".join(x)).tolist()
     X = tfidf.transform(tfidf_input)
 
     # Create labels
-    y = create_binary_labels(avg_scores_df.loc[1_000_000 : (size + 1_000_000)])
+    y = create_binary_labels(reviews_df.loc[1_000_000 : (size + 1_000_000)])
 
     return X, y
 
