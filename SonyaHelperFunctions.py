@@ -34,7 +34,7 @@ def add_price_range_to_df(restaurants_df):
     return returnDF
 
 def show_price_plot(restaurants_df):
-    axes=sns.boxplot(data=restaurants_df, x="PriceRange", y="avg_review_score", palette="mako")
+    axes=sns.boxplot(data=restaurants_df, x="PriceRange", y="avg_review_score", palette="mako", order=[1,2,3,4])
     axes.set_xlabel("Price Range (as told by Yelp)")
     axes.set_ylabel("Average Review Score (1 to 5)")
     plt.title("Higher Prices Correlated with Higher Reviews")
